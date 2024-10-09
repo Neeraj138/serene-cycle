@@ -1,0 +1,76 @@
+/* CalendarComponent.css */
+.react-calendar {
+  background-color: #0f172a; /* Dark background */
+  color: #ffffff; /* White text */
+  font-family: inherit;
+}
+
+.react-calendar__tile {
+  padding: 10px; /* Space for icons in future */
+}
+
+.react-calendar__tile--active {
+  background-color: #9333ea; /* Active date color */
+  border-radius: 2rem;
+}
+
+.react-calendar__tile:hover {
+    background-color: transparent !important; /* Active date color */
+    border-radius: 2rem;
+    outline: solid 1px #9333ea;
+  }
+
+.react-calendar__month-view__days__day--weekend {
+  color: #ffffff;
+}
+
+.react-calendar__navigation__next2-button {
+  display: none;
+}
+
+.react-calendar__navigation__prev2-button {
+  display: none;
+}
+
+abbr[title] {
+  text-decoration: none;
+}
+
+button:hover.react-calendar__tile {
+  background-color: transparent; /* Active date color */
+  border-radius: 2rem;
+  outline: solid 1px #9333ea;
+}
+
+/* Styling disabled date buttons */
+button:disabled {
+  background-color: #020617; /* Subtle background for disabled */
+  color: rgba(255, 255, 255, 0.5); /* Faded text color */
+  opacity: 0.6; /* Visual indication of disabled state */
+  pointer-events: none; /* Disable click events */
+}
+
+/* Optional: Ensure no hover effect for disabled buttons */
+button:disabled:hover {
+  background-color: #020617; /* No hover effect */
+}
+
+.react-calendar__tile:disabled {
+  background-color: #020617;
+  color: #ababab;
+  opacity: 0.6;
+}
+
+.react-calendar__tile--active:enabled:hover,
+.react-calendar__tile--active:enabled:focus {
+  background: #9333ea;
+}
+
+
+button.react-calendar__navigation__arrow:hover,button.react-calendar__navigation__arrow:focus {
+    background-color: #9333ea !important;
+}
+
+button.react-calendar__navigation__label:hover, button.react-calendar__navigation__label:focus {
+    background-color: #9333ea !important;
+}
