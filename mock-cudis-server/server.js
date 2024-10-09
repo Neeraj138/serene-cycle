@@ -43,6 +43,10 @@ const mockUserData = {
     },
 };
 
+app.get("/", (req, res) => {
+    res.json("mock server for cudis api")
+})
+
 app.get('/oauth/authorize', (req, res) => {
     const redirectUri = req.query.redirect_uri || 'http://localhost:3000/callback'; // Default to localhost if not provided
     // Simulate successful authorization
