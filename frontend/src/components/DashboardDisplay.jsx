@@ -151,11 +151,17 @@ function DashboardDisplay({ date }) {
       region: region,
     };
     const personalRecos = await getRecommendationsFromGemini(userInputData);
-    updateDataInDailyDataDb(date, userId, id, {
-      recommendations: JSON.stringify(personalRecos),
-    });
-    setIsLoading(false);
     setRecommendations(personalRecos);
+    const { isSuccess, isExists, id } = await checkIfDateExistsForUser(
+      date,
+      userId
+    );
+    if (isSuccess && isExists && id) {
+      updateDataInDailyDataDb(date, userId, id, {
+        recommendations: JSON.stringify(personalRecos),
+      });
+    }
+    setIsLoading(false);
   };
 
   useEffect(() => {
