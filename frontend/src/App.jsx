@@ -23,12 +23,15 @@ const App = () => {
   // Handle Google OAuth2 callback
   useEffect(() => {
     const fetchUserDetails = async () => {
-      const isGoogleLoginRedirect = localStorage.getItem("isGoogleLoginRedirect");
+      const isGoogleLoginRedirect = localStorage.getItem(
+        "isGoogleLoginRedirect"
+      );
       if (isGoogleLoginRedirect) {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const hashParams = new URLSearchParams(
+          window.location.hash.substring(1)
+        );
         const token = hashParams.get("access_token");
         if (token) {
-          console.log("Google Access Token:", token);
           localStorage.setItem("googleAccessToken", token);
           setGoogleAccessToken(token); // Update state
           localStorage.removeItem("isGoogleLoginRedirect");
@@ -41,9 +44,8 @@ const App = () => {
           })
             .then((response) => response.json())
             .then((user) => {
-              console.log("Google User Info:", user);
               localStorage.setItem("googleUser", JSON.stringify(user));
-
+              localStorage.setItem("userId", user.sub);
               const userData = {
                 email: user.email,
                 name: user.name,
@@ -89,23 +91,23 @@ const App = () => {
     fetchUserDetails();
   }, []);
 
-  // Handle Cudis pairing (OAuth login)
   const handleCudisPairing = () => {
     localStorage.setItem("isCudisPairingRedirect", "true");
-    const baseUrl = "http://localhost:5000"; // Ensure the Cudis base URL is correct
+    const baseUrl = import.meta.env.VITE_CUDIS_API;
     const authUrl = `${baseUrl}/oauth/authorize?response_type=token&client_id=${clientId}&redirect_uri=${redirectUri}`;
     window.location.href = authUrl;
   };
 
-  // Handle Cudis callback
   useEffect(() => {
-    const isCudisPairingRedirect = localStorage.getItem("isCudisPairingRedirect");
-    console.log(isCudisPairingRedirect)
+    const isCudisPairingRedirect = localStorage.getItem(
+      "isCudisPairingRedirect"
+    );
     if (isCudisPairingRedirect) {
-      const urlParams = new URLSearchParams(window.location.search.substring(1));
+      const urlParams = new URLSearchParams(
+        window.location.search.substring(1)
+      );
       const token = urlParams.get("access_token");
       if (token) {
-        console.log("Cudis Access Token:", token);
         localStorage.setItem("cudisAccessToken", token); // Store Cudis token in localStorage
         setCudisAccessToken(token); // Update state
         localStorage.removeItem("isCudisPairingRedirect");
@@ -159,22 +161,38 @@ const App = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-950 to-indigo-950 text-zinc-200">
       <CycleProvider>
-        <header className={`${!googleUser || !isCycleSetupComplete ? "text-5xl text-center p-8" : "text-xl text-center font-medium px-4 pt-2 pb-0"}`}>
+        <header
+          className={`${
+            !googleUser || !isCycleSetupComplete
+              ? "text-5xl text-center p-8"
+              : "text-xl text-center font-medium px-4 pt-2 pb-0"
+          }`}
+        >
           SereneCycle
         </header>
 
+        {!googleAccessToken && (
+          <div className="text-center mx-auto max-w-lg px-6">
+            <div className="text-4xl mb-4 font-medium bg-gradient-to-r from-teal-400 to-yellow-200 bg-clip-text text-transparent">
+              Welcome
+            </div>
+            <div className="text-2xl font-medium bg-gradient-to-r from-yellow-200 to-pink-400 bg-clip-text text-transparent">
+              Empower Your Cycle, Elevate Your Wellness
+            </div>
+            <div className="my-4 text-xl">
+              Our app is tailored to your unique cycle, giving you personalized
+              insights and wellness suggestions based on your symptoms, activity
+              levels, and menstrual cycle data.
+            </div>
+            <div className="mb-4 text-xl">
+              SereneCycle seamlessly integrates with the Cudis Ring, combining
+              your ring data with personalized recommendations.
+            </div>
+          </div>
+        )}
+
         <section className="px-4">
           <div className="max-w-md mx-auto">
-            {googleAccessToken && (
-              <div className="w-full text-center">
-                <button
-                  className="mt-4 text-lg font-bold px-4 py-2 rounded-md bg-red-800 hover:bg-red-600"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
-              </div>
-            )}
             {!googleAccessToken ? (
               <div className="p-6 text-center">
                 <button
@@ -201,6 +219,16 @@ const App = () => {
               <Router>
                 <Dashboard path="/dashboard" />
               </Router>
+            )}
+            {googleAccessToken && (
+              <div className="w-full text-center pb-8">
+                <button
+                  className="text-lg font-bold px-4 py-2 rounded-md bg-violet-900 hover:bg-violet-700"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              </div>
             )}
           </div>
         </section>

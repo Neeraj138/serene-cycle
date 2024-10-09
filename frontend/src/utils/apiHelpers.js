@@ -8,7 +8,7 @@ export const fetchHeartbeatData = async (date) => {
   };
   let accessToken = localStorage.getItem("access_token");
   const { startTime, endTime } = convertDateToUnix(formattedDate);
-  const baseUrl = `http://localhost:5000`;
+  const baseUrl = import.meta.env.VITE_CUDIS_API;
 
   try {
     const response = await fetch(
@@ -27,7 +27,6 @@ export const fetchHeartbeatData = async (date) => {
     }
 
     const data = await response.json();
-    // console.log(data, data.data);
     return data.data;
   } catch (error) {
     console.error("Error fetching heartbeat data:", error);
@@ -47,7 +46,7 @@ export const fetchStepData = async (date) => {
   };
   let accessToken = localStorage.getItem("access_token");
   const { startTime, endTime } = convertDateToUnix(formattedDate);
-  const baseUrl = `http://localhost:5000`;
+  const baseUrl = import.meta.env.VITE_CUDIS_API;
 
   try {
     const response = await fetch(
@@ -66,7 +65,6 @@ export const fetchStepData = async (date) => {
     }
 
     const data = await response.json();
-    // console.log(data, data.data);
     return {
       total: data?.data?.countStep || "--",
     };
@@ -86,7 +84,7 @@ export const fetchSleepData = async (date) => {
   };
   let accessToken = localStorage.getItem("access_token");
   const { startTime, endTime } = convertDateToUnix(formattedDate);
-  const baseUrl = `http://localhost:5000`;
+  const baseUrl = import.meta.env.VITE_CUDIS_API;
   try {
     const response = await fetch(
       `${baseUrl}/partner/v1/query/sleep?startTime=${startTime}&endTime=${endTime}`,
@@ -104,7 +102,6 @@ export const fetchSleepData = async (date) => {
     }
 
     const data = await response.json();
-    // console.log(data, data.data);
     return {
       deepRatio: data?.data?.deepRatio || "--",
       shallowRatio: data?.data?.shallowRatio || "--",

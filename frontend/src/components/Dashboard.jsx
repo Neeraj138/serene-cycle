@@ -14,8 +14,8 @@ const Dashboard = () => {
           <Popover>
             <PopoverTrigger asChild>
               <div>
-                <button className="w-full h-24 md:h-20 bg-purple-900 hover:bg-purple-700 text-lg font-semibold px-4 py-2 rounded-md flex items-center">
-                  <SquarePen className="w-8 h-8" />
+                <button className="w-full h-24 md:h-20 bg-purple-900 hover:bg-purple-700 text-lg font-semibold px-4 py-2 rounded-md flex items-center gap-2">
+                  <SquarePen className="w-7 h-7" />
                   Log Period Onset
                 </button>
               </div>
@@ -33,7 +33,7 @@ const Dashboard = () => {
             <PopoverTrigger asChild>
               <div>
                 <button className="w-full h-24 md:h-20 bg-purple-900 hover:bg-purple-700 text-lg font-semibold px-4 py-2 rounded-md flex items-center">
-                  <Calendar className="w-8 h-8" />
+                  <Calendar className="w-7 h-7" />
                   {!selectedDate ? "Pick a Date" : selectedDate.toDateString()}
                 </button>
               </div>

@@ -8,3 +8,17 @@ export const convertDateToUnix = (dateObj) => {
   
     return { startTime, endTime };
 };
+
+export const convertDateToYYYYMMDD = (date) => {
+    const yyyy = date.getFullYear().toString();
+    let mm = (date.getMonth() + 1).toString();
+    let dd = date.getDate().toString();
+    if (mm.length < 2) {
+        mm = "0" + mm
+    }
+    if (dd.length < 2) {
+        dd = "0" + dd
+    }
+
+    return [yyyy, mm, dd].join("-")
+}

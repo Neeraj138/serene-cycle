@@ -13,7 +13,12 @@ import {
 } from "../utils/cycleHelpers";
 import { Footprints, HeartPulse, Bed } from "lucide-react";
 import { getRecommendationsFromGemini } from "@/utils/recommendationHelpers";
-import { storeDailyData } from "@/lib/appwrite";
+import {
+  checkIfDateExistsForUser,
+  getDocumentFromDb,
+  storeDataInAppwrite,
+  updateDataInDailyDataDb,
+} from "@/lib/appwrite";
 
 function DashboardDisplay({ date }) {
   const { lastPeriod, avgCycleLength, bleedingDays, country, region } =
@@ -21,7 +26,7 @@ function DashboardDisplay({ date }) {
   const [heartbeatData, setHeartbeatData] = useState(null);
   const [stepsData, setStepsData] = useState(null);
   const [sleepData, setSleepData] = useState(null);
-  const [recommendations, setRecommendations] = useState(null);
+  const [recommendations, setRecommendations] = useState({});
   const [probableCyclePhase, setProbableCyclePhase] = useState(null);
   const [isProbablyFertile, setProbablyFertile] = useState(null);
   const [nextExpectedPeriodDate, setNextExpectedPeriodDate] = useState(
@@ -29,27 +34,67 @@ function DashboardDisplay({ date }) {
   );
   const [symptoms, setSymptoms] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const userId = localStorage.getItem("userId");
 
   useEffect(() => {
-    if (lastPeriod && avgCycleLength && bleedingDays) {
-      const probablePhase = calculateCyclePhaseForToday(
-        lastPeriod,
-        avgCycleLength,
-        bleedingDays,
-        date
-      );
-      const probableFertility = isFertileOnDate(
-        lastPeriod,
-        avgCycleLength,
-        bleedingDays,
-        date
-      );
-      setProbableCyclePhase(probablePhase);
-      setProbablyFertile(probableFertility);
-      setNextExpectedPeriodDate(
-        getExpectedNextPeriod(lastPeriod, avgCycleLength).toDateString()
-      );
-    }
+    const calculatePhase = async () => {
+      if (lastPeriod && avgCycleLength && bleedingDays) {
+        const probablePhase = calculateCyclePhaseForToday(
+          lastPeriod,
+          avgCycleLength,
+          bleedingDays,
+          date
+        );
+        const probableFertility = isFertileOnDate(
+          lastPeriod,
+          avgCycleLength,
+          bleedingDays,
+          date
+        );
+        setProbableCyclePhase(probablePhase);
+        setProbablyFertile(probableFertility);
+        setNextExpectedPeriodDate(
+          getExpectedNextPeriod(lastPeriod, avgCycleLength).toDateString()
+        );
+        const { isSuccess, isExists, id } = await checkIfDateExistsForUser(
+          date,
+          userId
+        );
+        if (isSuccess && !isExists) {
+          let dataToStore = {
+            date: date,
+            symptoms: JSON.stringify(symptoms),
+            sleepData: "",
+            stepsData: "",
+            heartbeatData: "",
+            isProbablyFertile: isProbablyFertile,
+            nextExpectedPeriodDate: nextExpectedPeriodDate,
+            avgCycleLength: avgCycleLength,
+            bleedingDays: bleedingDays,
+            country: country,
+            region: region,
+            lastPeriod: lastPeriod,
+            userId: userId,
+            recommendations: JSON.stringify(recommendations),
+          };
+          if (date.toDateString() === new Date().toDateString()) {
+            dataToStore.sleepData = "";
+            dataToStore.heartbeatData = "";
+            dataToStore.stepsData = "";
+          }
+          await storeDataInAppwrite(dataToStore);
+        } else if (isSuccess && isExists) {
+          const updateObj = {
+            lastPeriod: lastPeriod.toDateString(),
+            avgCycleLength: avgCycleLength,
+            bleedingDays: bleedingDays,
+          };
+          updateDataInDailyDataDb(date, userId, id, updateObj);
+        }
+      }
+    };
+
+    calculatePhase();
   }, [lastPeriod, avgCycleLength, bleedingDays, date]);
 
   useEffect(() => {
@@ -58,13 +103,35 @@ function DashboardDisplay({ date }) {
       if (dateToFetch.toDateString() === new Date().toDateString()) {
         dateToFetch.setDate(dateToFetch.getDate() - 1);
       }
-      console.log(dateToFetch, date);
+
+      const existingData = await checkIfDateExistsForUser(dateToFetch, userId);
       const heartBeatData = await fetchHeartbeatData(dateToFetch);
       const totalStepData = await fetchStepData(dateToFetch);
       const totalSleepData = await fetchSleepData(dateToFetch);
+
       setHeartbeatData(heartBeatData);
       setStepsData(totalStepData);
       setSleepData(totalSleepData);
+
+      if (existingData.isSuccess && !existingData.isExists) {
+        const dataToStore = {
+          date: dateToFetch,
+          symptoms: JSON.stringify(symptoms),
+          sleepData: JSON.stringify(totalSleepData),
+          stepsData: JSON.stringify(totalStepData),
+          heartbeatData: JSON.stringify(heartBeatData),
+          isProbablyFertile: isProbablyFertile,
+          nextExpectedPeriodDate: nextExpectedPeriodDate,
+          avgCycleLength: avgCycleLength,
+          bleedingDays: bleedingDays,
+          country: country,
+          region: region,
+          lastPeriod: lastPeriod,
+          userId: userId,
+          recommendations: JSON.stringify(recommendations),
+        };
+        await storeDataInAppwrite(dataToStore);
+      }
     };
 
     fetchData();
@@ -83,12 +150,20 @@ function DashboardDisplay({ date }) {
       country: country,
       region: region,
     };
-    console.log(isLoading)
     const personalRecos = await getRecommendationsFromGemini(userInputData);
-    console.log(isLoading)
+    updateDataInDailyDataDb(date, userId, id, {
+      recommendations: JSON.stringify(personalRecos),
+    });
     setIsLoading(false);
     setRecommendations(personalRecos);
   };
+
+  useEffect(() => {
+    if (!userId) {
+      localStorage.clear();
+      window.location.replace("/");
+    }
+  }, [userId]);
 
   return (
     <div>
@@ -208,16 +283,24 @@ function DashboardDisplay({ date }) {
         )}
         <AddSymptoms symptoms={symptoms} setSymptoms={setSymptoms} />
       </div>
-      <div className="mt-8 text-center">
-        <button
-          className="bg-violet-900 hover:bg-violet-700 text-lg font-bold px-4 py-2 rounded-md"
-          onClick={getRecommendations}
-        >
-          {isLoading ? "Fetching..." : "Get Recommendations"}
-        </button>
-      </div>
+      {date.toDateString() === new Date().toDateString() ? (
+        <div className="mt-8 text-center">
+          <button
+            className="bg-violet-900 hover:bg-violet-700 text-lg font-bold px-4 py-2 rounded-md"
+            onClick={getRecommendations}
+            disabled={!symptoms.length > 0}
+          >
+            {isLoading ? "Fetching..." : "Get Recommendations"}
+          </button>
+          {!symptoms.length > 0 && (
+            <div className="text-purple-400 my-2">
+              Log symptoms/how you are feeling to enable recommendations!
+            </div>
+          )}
+        </div>
+      ) : null}
 
-      {recommendations && (
+      {symptoms.length > 0 && Object.keys(recommendations).length > 0 && (
         <div className="mt-8 bg-gradient-to-br from-purple-800 to-indigo-800 p-3 rounded-md shadow-lg">
           <h2 className="text-lg font-medium mb-2">
             Personalized Recommendations
@@ -227,7 +310,9 @@ function DashboardDisplay({ date }) {
               <h3 className="font-bold">Workouts</h3>
               <ul>
                 {recommendations.workouts.map((item, index) => (
-                  <li key={index} className="mt-2">-{" "}{item}</li>
+                  <li key={index} className="mt-2">
+                    - {item}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -235,7 +320,9 @@ function DashboardDisplay({ date }) {
               <h3 className="font-bold">Food</h3>
               <ul>
                 {recommendations.food.map((item, index) => (
-                  <li key={index} className="mt-2">-{" "}{item}</li>
+                  <li key={index} className="mt-2">
+                    - {item}
+                  </li>
                 ))}
               </ul>
             </div>

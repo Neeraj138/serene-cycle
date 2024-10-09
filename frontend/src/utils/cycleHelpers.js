@@ -14,14 +14,6 @@ export const calculateCyclePhaseForToday = (
   const follicularPhaseLength =
     avgCycleLength - bleedingDays - lutealPhaseLength;
 
-  console.log(
-    avgCycleLength,
-    bleedingDays,
-    lutealPhaseLength,
-    follicularPhaseLength,
-    daysSinceLastPeriod
-  );
-
   if (daysSinceLastPeriod < bleedingDays) {
     return "Menstrual Phase"; // Still bleeding
   } else if (daysSinceLastPeriod < bleedingDays + follicularPhaseLength) {

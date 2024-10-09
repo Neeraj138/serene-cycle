@@ -1,6 +1,7 @@
 import { useState } from "preact/hooks";
 import { useCycleContext } from "./CycleContext";
 import { CountryDropdown, RegionDropdown } from "react-country-region-selector";
+import { convertDateToYYYYMMDD } from "@/utils/globalHelpers";
 
 const CycleSetup = ({ onSetupComplete }) => {
   const {
@@ -104,7 +105,7 @@ const CycleSetup = ({ onSetupComplete }) => {
             type="date"
             value={
               lastPeriod instanceof Date && !isNaN(lastPeriod)
-                ? lastPeriod.toISOString().split("T")[0]
+                ? convertDateToYYYYMMDD(lastPeriod)
                 : null
             }
             max={new Date().toISOString().split("T")[0]}

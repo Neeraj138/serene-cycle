@@ -59,12 +59,9 @@ export const getRecommendationsFromGemini = async (data) => {
   let recommendations = []
   try {
     recommendations = JSON.parse(recommendationsText)
-    console.log(recommendations)
   } catch (e) {
     console.log(e)
     recommendations = { food: [], workouts: [] }
   }
-  console.log("Food Recommendations:", recommendations.food);
-  console.log("Workout Recommendations:", recommendations.workouts);
   return recommendations;
 };
